@@ -14,7 +14,7 @@ This script will help you setup your freshly installed Debian server. It will:
 #### Step 1 - Download and install script
 
 ```
-wget https://raw.githubusercontent.com/unixxio/prepare-debian-9-stretch/master/prepare_debian_9.sh
+wget -q https://raw.githubusercontent.com/unixxio/prepare-debian-9-stretch/master/prepare_debian_9.sh
 ```
 
 #### Step 2 - Execute install script
