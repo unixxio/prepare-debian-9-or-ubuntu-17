@@ -2,9 +2,7 @@
 echo""
 
 # requirements
-rm dhcp.tmp.txt > /dev/null 2>&1
-rm google.dns.txt > /dev/null 2>&1
-rm sshkey.tmp.txt > /dev/null 2>&1
+rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
 
 # set variables
 dhcp_ip=`ifconfig | awk {'print $2'} | head -2 | tail -1`
@@ -149,7 +147,7 @@ EOF
 apt-get update -y > /dev/null 2>&1 && apt-get upgrade -y > /dev/null 2>&1
 
 # install packages
-apt-get install sudo net-tools rsync unzip curl htop -y > /dev/null 2>&1
+apt-get install sudo openssh-server net-tools rsync unzip curl htop -y > /dev/null 2>&1
 
 # get network interface (needed for setting static ip below)
 network_interface=`ifconfig | awk {'print $1'} | head -1 | tr -d ':'`
@@ -217,9 +215,7 @@ fi
 echo ""
 
 # installation cleanup
-rm dhcp.tmp.txt > /dev/null 2>&1
-rm google.dns.txt > /dev/null 2>&1
-rm sshkey.tmp.txt > /dev/null 2>&1
+rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
 
 # start check
 summary_question="[ \e[92mDo you want to continue? \e[39m]:"
