@@ -1,6 +1,6 @@
 #!/bin/bash
 # author: https://www.unixx.io
-# version: 22/03/2018 - v1.0 - First release
+# version: 22/03/2018 - v1.1 - First release
 
 # requirements
 rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
