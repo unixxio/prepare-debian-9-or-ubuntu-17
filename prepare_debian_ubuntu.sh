@@ -14,15 +14,25 @@ echo -e "\n[ \e[92mWaiting for the installation to start. First installing some 
 # prepare sources.list
 if [[ ${ubuntu} == ubuntu ]]; then
 cat <<EOF>> /etc/apt/sources.list
-###### Ubuntu Main Repos
-deb http://nl.archive.ubuntu.com/ubuntu/ artful main
-deb-src http://nl.archive.ubuntu.com/ubuntu/ artful main
+# default
+deb http://nl.archive.ubuntu.com/ubuntu/ artful main restricted
+deb http://nl.archive.ubuntu.com/ubuntu/ artful-updates main restricted
 
-###### Ubuntu Update Repos
-deb http://nl.archive.ubuntu.com/ubuntu/ artful-security main
-deb http://nl.archive.ubuntu.com/ubuntu/ artful-updates main
-deb-src http://nl.archive.ubuntu.com/ubuntu/ artful-security main
-deb-src http://nl.archive.ubuntu.com/ubuntu/ artful-updates main
+# universe
+deb http://nl.archive.ubuntu.com/ubuntu/ artful universe
+deb http://nl.archive.ubuntu.com/ubuntu/ artful-updates universe
+
+# multiverse
+deb http://nl.archive.ubuntu.com/ubuntu/ artful multiverse
+deb http://nl.archive.ubuntu.com/ubuntu/ artful-updates multiverse
+
+# backports
+deb http://nl.archive.ubuntu.com/ubuntu/ artful-backports main restricted universe multiverse
+
+# security
+deb http://security.ubuntu.com/ubuntu artful-security main restricted
+deb http://security.ubuntu.com/ubuntu artful-security universe
+deb http://security.ubuntu.com/ubuntu artful-security multiverse
 EOF
 fi
 if [[ ${debian} == debian ]]; then
