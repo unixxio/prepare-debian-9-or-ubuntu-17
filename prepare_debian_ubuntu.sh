@@ -1,6 +1,9 @@
 #!/bin/bash
 # author: https://www.unixx.io
-# version: 22/03/2018 - v1.2
+
+# set script version
+script_version="1.2"
+script_date="22/03/2018"
 
 # requirements
 rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
@@ -9,10 +12,22 @@ rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm ssh
 ubuntu=`cat /etc/os-release | grep ID | head -1 | cut -d= -f2-`
 debian=`cat /etc/os-release | grep ID | tail -1 | cut -d= -f2-`
 
-echo -e "\n[ \e[92mWaiting for the installation to start. First installing some requirements. Please wait ... \e[39m]"
+echo -e "\n[ \e[92mScript version \e[39m]  : [ ${script_version} ]"
+echo -e "[ \e[92mScript date \e[39m]     : [ ${script_date} ]"
+
+if [[ ${ubuntu} == ubuntu ]]; then
+  echo -e "[ \e[92mDetected linux \e[39m]  : [ Ubuntu ]"
+  echo -e "\n[ \e[92mPlease wait while we update Ubuntu and packages \e[39m]"
+fi
+if [[ ${debian} == debian ]]; then
+  echo -e "[ \e[92mDetected linux \e[39m]  : [ Debian ]"
+  echo -e "\n[ \e[92mPlease wait while we update Debian and packages \e[39m]"
+fi
 
 # prepare sources.list
 if [[ ${ubuntu} == ubuntu ]]; then
+# clear existing sources.list
+> /etc/apt/sources.list
 cat <<EOF>> /etc/apt/sources.list
 # default
 deb http://nl.archive.ubuntu.com/ubuntu/ artful main restricted
@@ -36,6 +51,8 @@ deb http://security.ubuntu.com/ubuntu artful-security multiverse
 EOF
 fi
 if [[ ${debian} == debian ]]; then
+# clear existing sources.list
+> /etc/apt/sources.list
 cat << EOF > /etc/apt/sources.list
 deb http://ftp.nl.debian.org/debian/ stretch main
 deb-src http://ftp.nl.debian.org/debian/ stretch main
@@ -55,6 +72,8 @@ apt-get update -y > /dev/null 2>&1 && apt-get upgrade -y > /dev/null 2>&1
 # install packages
 apt-get install sudo openssh-server net-tools rsync unzip curl htop -y > /dev/null 2>&1
 
+echo -e "[ \e[92mok \e[39m] - [ Updating finished ]"
+
 # set variables
 dhcp_ip=`ifconfig | awk {'print $2'} | head -2 | tail -1`
 dhcp_netmask=`ifconfig | awk {'print $4'} | head -2 | tail -1`
@@ -63,10 +82,11 @@ google_dns1="8.8.8.8"
 google_dns2="8.8.4.4"
 
 # questions
-echo -e -n "\n[ \e[92mPlease enter a hostname (example: server.domain.local) \e[39m]: "
+echo -e "\n[ \e[92mPlease enter a hostname \e[39m]"
+echo -e -n "[ \e[92mexample:\e[39m host.domain.local ]: "
 read hostname
 
-dhcp_question="[ \e[92mDo you want to use DHCP? \e[39m]: "
+dhcp_question="\n[ \e[92mDo you want to use DHCP? \e[39m]: "
 ask_dhcp_question=`echo -e $dhcp_question`
 
 read -r -p "${ask_dhcp_question} [y/N] " question_response
@@ -108,7 +128,7 @@ case "${question_response}" in
     *)
 esac
 
-ssh_question="[ \e[92mDo you want to add a SSH key? \e[39m]: "
+ssh_question="\n[ \e[92mDo you want to add a SSH key? \e[39m]: "
 ask_ssh_question=`echo -e $ssh_question`
 
 read -r -p "${ask_ssh_question} [y/N] " question_response
@@ -124,38 +144,31 @@ case "${question_response}" in
     *)
 esac
 
-# empty line
-echo ""
-
 # summery of above questions
-echo -e "[ \e[92mInstallation overview \e[39m]"
-echo ""
-echo "--"
-echo ""
-echo -e "[ \e[92mHostname \e[39m]           : [ \e[92m${hostname} \e[39m]"
+echo -e "\n--"
+echo -e "[ \e[92mHostname \e[39m]        : [ ${hostname} ]"
 echo ""
 if [ `cat dhcp.tmp.txt` == "false"  ] ;then
- echo -e "[ \e[92mIP adres \e[39m]           : [ \e[92m${static_ip} \e[39m]"
- echo -e "[ \e[92mSubnet \e[39m]             : [ \e[92m${netmask} \e[39m]"
- echo -e "[ \e[92mGateway \e[39m]            : [ \e[92m${gateway} \e[39m]"
+ echo -e "[ \e[92mIP adres \e[39m]        : [ ${static_ip} ]"
+ echo -e "[ \e[92mSubnet \e[39m]          : [ ${netmask} ]"
+ echo -e "[ \e[92mGateway \e[39m]         : [ ${gateway} ]"
 else
- echo -e "[ \e[92mIP adres \e[39m]           : [ \e[92m${dhcp_ip} \e[39m]"
- echo -e "[ \e[92mSubnet \e[39m]             : [ \e[92m${dhcp_netmask} \e[39m]"
- echo -e "[ \e[92mGateway \e[39m]            : [ \e[92m${dhcp_gateway} \e[39m]"
+ echo -e "[ \e[92mIP adres \e[39m]        : [ ${dhcp_ip} ]"
+ echo -e "[ \e[92mSubnet \e[39m]          : [ ${dhcp_netmask} ]"
+ echo -e "[ \e[92mGateway \e[39m]         : [ ${dhcp_gateway} ]"
 fi
 echo ""
 if [ `cat google.dns.txt` == "true"  ] ;then
- echo -e "[ \e[92mNameserver 1 \e[39m]       : [ \e[92m${google_dns1} \e[39m]"
- echo -e "[ \e[92mNameserver 2 \e[39m]       : [ \e[92m${google_dns2} \e[39m]"
+ echo -e "[ \e[92mNameserver 1 \e[39m]    : [ ${google_dns1} ]"
+ echo -e "[ \e[92mNameserver 2 \e[39m]    : [ ${google_dns2} ]"
 else
- echo -e "[ \e[92mNameserver 1 \e[39m]       : [ \e[92m${nameserver_1} \e[39m]"
- echo -e "[ \e[92mNameserver 2 \e[39m]       : [ \e[92m${nameserver_2} \e[39m]"
+ echo -e "[ \e[92mNameserver 1 \e[39m]    : [ ${nameserver_1} ]"
+ echo -e "[ \e[92mNameserver 2 \e[39m]    : [ ${nameserver_2} ]"
 fi
 if [ `cat sshkey.tmp.txt` == "true"  ] ;then
  echo ""
- echo -e "[ \e[92mSSH key \e[39m]            : [ \e[92m${ssh_key} \e[39m]"
+ echo -e "[ \e[92mSSH key \e[39m]         : [ ${ssh_key} ]"
 fi
-echo ""
 echo "--"
 
 # start check
@@ -173,11 +186,6 @@ case "${question_response}" in
     *)
 esac
 # end check
-
-echo ""
-# waiting for installations
-echo -e "[ \e[92mWaiting while installation is being completed ... \e[39m]"
-echo ""
 
 # get network interface (needed for setting static ip below)
 network_interface=`ifconfig | awk {'print $1'} | head -1 | tr -d ':'`
@@ -244,27 +252,26 @@ fi
 
 # ask question and give warning before restarten network
 if [ `cat dhcp.tmp.txt` == "false"  ] ;then
-  echo -e "[ \e[92mWarning \e[39m]: [ \e[92mServer will be rebooted \e[39m]"
-  echo -e "[ \e[92mIP after boot \e[39m]: [ \e[92m${static_ip} \e[39m]"
+  echo -e "\n[ \e[92ok \e[39m] - [ Installation finished ]"
+  echo -e "[ \e[92mIP adres \e[39m]        : [ ${static_ip} ]"
 else
-  echo -e "[ \e[92mWarning \e[39m]: [ \e[92mServer will be rebooted \e[39m]"
-  echo -e "[ \e[92mIP after boot \e[39m]: [ \e[92m${dhcp_ip} \e[39m]"
+  echo -e "\n[ \e[92mok \e[39m] - [ Installation finished ]"
+  echo -e "[ \e[92mIP adres \e[39m]        : [ ${dhcp_ip} ]"
 fi
 
 # cleanup installation
 rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
 
+echo -e "\n[ The server will be rebooted ]"
+
 # start check
-summary_question="\n[ \e[92mDo you want to continue? \e[39m]:"
+summary_question="[ \e[92mDo you want to continue? \e[39m]:"
 ask_summary_question=`echo -e $summary_question`
 
 read -r -p "${ask_summary_question} [y/N] " question_response
 case "${question_response}" in
     [yY][eE][sS]|[yY])
-        # restart networking
-        #service ssh restart
-        #ifdown ${network_interface} > /dev/null 2>&1
-        #ifup ${network_interface} > /dev/null 2>&1
+        # reboot linux
         reboot
         ;;
     *)
