@@ -23,3 +23,12 @@ wget -q https://raw.githubusercontent.com/unixxio/prepare-debian-9-stretch/maste
 ```
 sudo chmod +x prepare_debian_9.sh && sudo ./prepare_debian_9.sh
 ```
+
+#### Tested on
+
+* Debian 9 Stretch
+
+#### Changelog (D/m/Y)
+
+* 22/03/2018 - v1.1 - Minor updates
+* 14/03/2018 - v1.0 - First release
