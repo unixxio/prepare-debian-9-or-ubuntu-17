@@ -1,8 +1,30 @@
 #!/bin/bash
-echo""
+# author: https://www.unixx.io
+# version: 22/03/2018 - v1.0 - First release
 
 # requirements
 rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
+
+echo -e "\n[ \e[92mWaiting for the installation to start. First installing some requirements. Please wait ... \e[39m]"
+
+# prepare sources.list
+cat << EOF > /etc/apt/sources.list
+deb http://ftp.nl.debian.org/debian/ stretch main
+deb-src http://ftp.nl.debian.org/debian/ stretch main
+
+deb http://security.debian.org/debian-security stretch/updates main
+deb-src http://security.debian.org/debian-security stretch/updates main
+
+# stretch-updates, previously known as 'volatile'
+deb http://ftp.nl.debian.org/debian/ stretch-updates main
+deb-src http://ftp.nl.debian.org/debian/ stretch-updates main
+EOF
+
+# update debian and packages
+apt-get update -y > /dev/null 2>&1 && apt-get upgrade -y > /dev/null 2>&1
+
+# install packages
+apt-get install sudo openssh-server net-tools rsync unzip curl htop -y > /dev/null 2>&1
 
 # set variables
 dhcp_ip=`ifconfig | awk {'print $2'} | head -2 | tail -1`
@@ -12,7 +34,7 @@ google_dns1="8.8.8.8"
 google_dns2="8.8.4.4"
 
 # questions
-echo -e -n "[ \e[92mPlease enter a hostname (example: debian.domain.local) \e[39m]: "
+echo -e -n "\n[ \e[92mPlease enter a hostname (example: debian.domain.local) \e[39m]: "
 read hostname
 
 dhcp_question="[ \e[92mDo you want to use DHCP? \e[39m]: "
@@ -44,7 +66,6 @@ ask_google_question=`echo -e $google_question`
 read -r -p "${ask_google_question} [y/N] " question_response
 case "${question_response}" in
     [yY][eE][sS]|[yY])
-        # do nothing
         echo "true" > google.dns.txt
         ;;
     *)
@@ -69,7 +90,7 @@ case "${question_response}" in
         echo "true" > sshkey.tmp.txt
         ;;
     *)
-        # do nothing
+        echo "false" > sshkey.tmp.txt
         ;;
     *)
 esac
@@ -79,6 +100,7 @@ echo ""
 
 # summery of above questions
 echo -e "[ \e[92mInstallation overview \e[39m]"
+echo ""
 echo "--"
 echo ""
 echo -e "[ \e[92mHostname \e[39m]           : [ \e[92m${hostname} \e[39m]"
@@ -104,13 +126,11 @@ if [ `cat sshkey.tmp.txt` == "true"  ] ;then
  echo ""
  echo -e "[ \e[92mSSH key \e[39m]            : [ \e[92m${ssh_key} \e[39m]"
 fi
+echo ""
 echo "--"
 
-#empty line
-echo ""
-
 # start check
-summary_question="[ \e[92mIs the above information correct? \e[39m]:"
+summary_question="\n[ \e[92mIs the above information correct? \e[39m]:"
 ask_summary_question=`echo -e $summary_question`
 
 read -r -p "${ask_summary_question} [y/N] " question_response
@@ -130,25 +150,6 @@ echo ""
 echo -e "[ \e[92mWaiting while installation is being completed ... \e[39m]"
 echo ""
 
-# prepare sources.list
-cat << EOF > /etc/apt/sources.list
-deb http://ftp.nl.debian.org/debian/ stretch main
-deb-src http://ftp.nl.debian.org/debian/ stretch main
-
-deb http://security.debian.org/debian-security stretch/updates main
-deb-src http://security.debian.org/debian-security stretch/updates main
-
-# stretch-updates, previously known as 'volatile'
-deb http://ftp.nl.debian.org/debian/ stretch-updates main
-deb-src http://ftp.nl.debian.org/debian/ stretch-updates main
-EOF
-
-# update debian and packages
-apt-get update -y > /dev/null 2>&1 && apt-get upgrade -y > /dev/null 2>&1
-
-# install packages
-apt-get install sudo openssh-server net-tools rsync unzip curl htop -y > /dev/null 2>&1
-
 # get network interface (needed for setting static ip below)
 network_interface=`ifconfig | awk {'print $1'} | head -1 | tr -d ':'`
 
@@ -167,6 +168,18 @@ iface ${network_interface} inet static
         address ${static_ip}
         netmask ${netmask}
         gateway ${gateway}
+EOF
+else
+cat << EOF > /etc/network/interfaces
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug ${network_interface}
+iface ${network_interface} inet dhcp
 EOF
 fi
 
@@ -200,33 +213,30 @@ if [ `cat sshkey.tmp.txt`  == "true"  ] ;then
   chmod 600 /root/.ssh/authorized_keys
 fi
 
-# empty line
-echo ""
-
 # ask question and give warning before restarten network
-echo -e "[ \e[92mWarning \e[39m] - [ \e[92mNetworking will be restarted \e[39m]"
 if [ `cat dhcp.tmp.txt` == "false"  ] ;then
-  echo -e "[ \e[92mYou should now connect to SSH on ${static_ip} \e[39m]"
+  echo -e "[ \e[92mWarning \e[39m]: [ \e[92mServer will be rebooted \e[39m]"
+  echo -e "[ \e[92mIP after boot \e[39m]: [ \e[92m${static_ip} \e[39m]"
 else
-  echo -e "[ \e[92mYou should now connect to SSH on ${dhcp_ip} \e[39m]"
+  echo -e "[ \e[92mWarning \e[39m]: [ \e[92mServer will be rebooted \e[39m]"
+  echo -e "[ \e[92mIP after boot \e[39m]: [ \e[92m${dhcp_ip} \e[39m]"
 fi
 
-# empty line
-echo ""
-
-# installation cleanup
+# cleanup installation
 rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
 
 # start check
-summary_question="[ \e[92mDo you want to continue? \e[39m]:"
+summary_question="\n[ \e[92mDo you want to continue? \e[39m]:"
 ask_summary_question=`echo -e $summary_question`
 
 read -r -p "${ask_summary_question} [y/N] " question_response
 case "${question_response}" in
     [yY][eE][sS]|[yY])
         # restart networking
-        service ssh restart
-        service networking restart
+        #service ssh restart
+        #ifdown ${network_interface} > /dev/null 2>&1
+        #ifup ${network_interface} > /dev/null 2>&1
+        reboot
         ;;
     *)
         exit
