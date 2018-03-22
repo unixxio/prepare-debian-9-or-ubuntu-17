@@ -1,13 +1,31 @@
 #!/bin/bash
 # author: https://www.unixx.io
-# version: 22/03/2018 - v1.1 - First release
+# version: 22/03/2018 - v1.2
 
 # requirements
 rm dhcp.tmp.txt > /dev/null 2>&1 && rm google.dns.txt > /dev/null 2>&1 && rm sshkey.tmp.txt > /dev/null 2>&1
 
+# get linux version
+ubuntu=`cat /etc/os-release | grep ID | head -1 | cut -d= -f2-`
+debian=`cat /etc/os-release | grep ID | tail -1 | cut -d= -f2-`
+
 echo -e "\n[ \e[92mWaiting for the installation to start. First installing some requirements. Please wait ... \e[39m]"
 
 # prepare sources.list
+if [[ ${ubuntu} == ubuntu ]]; then
+cat <<EOF>> /etc/apt/sources.list
+###### Ubuntu Main Repos
+deb http://nl.archive.ubuntu.com/ubuntu/ artful main
+deb-src http://nl.archive.ubuntu.com/ubuntu/ artful main
+
+###### Ubuntu Update Repos
+deb http://nl.archive.ubuntu.com/ubuntu/ artful-security main
+deb http://nl.archive.ubuntu.com/ubuntu/ artful-updates main
+deb-src http://nl.archive.ubuntu.com/ubuntu/ artful-security main
+deb-src http://nl.archive.ubuntu.com/ubuntu/ artful-updates main
+EOF
+fi
+if [[ ${debian} == debian ]]; then
 cat << EOF > /etc/apt/sources.list
 deb http://ftp.nl.debian.org/debian/ stretch main
 deb-src http://ftp.nl.debian.org/debian/ stretch main
@@ -19,8 +37,9 @@ deb-src http://security.debian.org/debian-security stretch/updates main
 deb http://ftp.nl.debian.org/debian/ stretch-updates main
 deb-src http://ftp.nl.debian.org/debian/ stretch-updates main
 EOF
+fi
 
-# update debian and packages
+# update linux and packages
 apt-get update -y > /dev/null 2>&1 && apt-get upgrade -y > /dev/null 2>&1
 
 # install packages
@@ -34,7 +53,7 @@ google_dns1="8.8.8.8"
 google_dns2="8.8.4.4"
 
 # questions
-echo -e -n "\n[ \e[92mPlease enter a hostname (example: debian.domain.local) \e[39m]: "
+echo -e -n "\n[ \e[92mPlease enter a hostname (example: server.domain.local) \e[39m]: "
 read hostname
 
 dhcp_question="[ \e[92mDo you want to use DHCP? \e[39m]: "
@@ -199,7 +218,7 @@ fi
 # remove 127.0.1.1 from hosts file
 sed -i '/127.0.1.1/d' /etc/hosts
 
-# set hostname for debian
+# set hostname for server
 echo "${hostname}" > /etc/hostname
 echo "${hostname}" > /etc/mailname
 
