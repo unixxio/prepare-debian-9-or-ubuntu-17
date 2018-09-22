@@ -70,7 +70,7 @@ fi
 apt-get update -y > /dev/null 2>&1 && apt-get upgrade -y > /dev/null 2>&1
 
 # install packages
-apt-get install sudo openssh-server net-tools rsync unzip curl htop -y > /dev/null 2>&1
+apt-get install sudo openssh-server net-tools rsync unzip curl htop pwgen -y > /dev/null 2>&1
 
 echo -e "[ \e[92mok \e[39m] - [ Updating finished ]"
 
